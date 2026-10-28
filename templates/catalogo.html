@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catálogo Oficial - Taller de Costura y Detentes Religiosos</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root { color-scheme: light; }
+        body { background-color: #fafaf9; color: #1c1917; font-family: system-ui, -apple-system, sans-serif; }
+    </style>
+</head>
+<body class="min-h-screen bg-stone-50 text-stone-800">
+    <!-- Header -->
+    <header class="bg-amber-900 text-amber-50 shadow-lg sticky top-0 z-50">
+        <div class="max-w-5xl mx-auto px-4 py-4 flex flex-col md:flex-row justify-between items-center gap-3">
+            <div>
+                <h1 class="text-xl font-bold tracking-wide">Taller de Costura & Detentes</h1>
+                <p class="text-xs text-amber-200">Catálogo de Detentes para Cargos, Estandartes y Costura</p>
+            </div>
+            <div class="flex items-center space-x-3">
+                <a href="/seguimiento" class="bg-amber-800 hover:bg-amber-950 text-white px-4 py-2 rounded-xl text-xs font-bold transition shadow-sm border border-amber-700 flex items-center space-x-1.5">
+                    <span>🔍 Consultar Estado de Prenda</span>
+                </a>
+                <a href="https://wa.me/51944155106?text=Hola,%20deseo%20realizar%20una%20consulta%20o%20pedido" target="_blank" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-xs font-bold transition shadow-sm flex items-center space-x-1.5">
+                    <span>💬 WhatsApp</span>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main -->
+    <main class="max-w-5xl mx-auto px-4 py-8 space-y-8">
+        <!-- Banner -->
+        <div class="bg-gradient-to-r from-amber-100 to-orange-100 border border-amber-200 rounded-3xl p-8 text-center shadow-sm">
+            <h2 class="text-3xl font-extrabold text-amber-950 mb-2">Confección Fina y Bordados Religiosos</h2>
+            <p class="text-amber-900 text-sm max-w-xl mx-auto">Especialistas en detentes para mayordomías, estandartes institucionales y servicios de costura profesional en el Perú.</p>
+        </div>
+
+        <!-- Filter Buttons -->
+        <div class="flex flex-wrap justify-center gap-2">
+            <button onclick="filterCatalog('todos')" class="cat-filter px-5 py-2.5 rounded-full text-xs font-bold bg-amber-900 text-white shadow transition">Todos</button>
+            <button onclick="filterCatalog('detentes')" class="cat-filter px-5 py-2.5 rounded-full text-xs font-bold bg-white text-stone-700 border border-stone-300 hover:bg-stone-100 transition">Detentes para Cargos</button>
+            <button onclick="filterCatalog('estandartes')" class="cat-filter px-5 py-2.5 rounded-full text-xs font-bold bg-white text-stone-700 border border-stone-300 hover:bg-stone-100 transition">Estandartes y Mantos</button>
+            <button onclick="filterCatalog('costura')" class="cat-filter px-5 py-2.5 rounded-full text-xs font-bold bg-white text-stone-700 border border-stone-300 hover:bg-stone-100 transition">Servicios de Costura</button>
+        </div>
+
+        <!-- Catalog Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6" id="catalog-grid">
+            <!-- Loaded via API -->
+        </div>
+    </main>
+
+    <footer class="text-center py-8 text-xs text-stone-400 border-t border-stone-200 mt-12">
+        <p>Taller de Costura y Detentes Religiosos • Envíos a todo el Perú • Cel: +51 944 155 106</p>
+    </footer>
+
+    <script>
+        let allItems = [];
+
+        async function fetchCatalog() {
+            try {
+                const res = await fetch('/api/catalog');
+                allItems = await res.json();
+                renderGrid(allItems, 'todos');
+            } catch(e) {
+                console.error("Error fetching catalog", e);
+            }
+        }
+
+        function filterCatalog(category) {
+            const buttons = document.querySelectorAll('.cat-filter');
+            buttons.forEach(btn => {
+                btn.className = "cat-filter px-5 py-2.5 rounded-full text-xs font-bold bg-white text-stone-700 border border-stone-300 hover:bg-stone-100 transition";
+            });
+            event.target.className = "cat-filter px-5 py-2.5 rounded-full text-xs font-bold bg-amber-900 text-white shadow transition";
+
+            renderGrid(allItems, category);
+        }
+
+        function renderGrid(items, category) {
+            const grid = document.getElementById('catalog-grid');
+            grid.innerHTML = "";
+
+            const filtered = category === 'todos' ? items : items.filter(i => i.categoria === category);
+
+            if(filtered.length === 0) {
+                grid.innerHTML = `<div class="col-span-3 text-center py-12 text-stone-400 text-sm">No hay productos en esta categoría.</div>`;
+                return;
+            }
+
+            filtered.forEach(item => {
+                let badgeBg = "bg-amber-100 text-amber-900";
+                if(item.categoria === 'estandartes') badgeBg = "bg-purple-100 text-purple-900";
+                if(item.categoria === 'costura') badgeBg = "bg-blue-100 text-blue-900";
+
+                const catLabel = item.categoria === 'detentes' ? 'Detente para Cargo' : item.categoria === 'estandartes' ? 'Estandarte y Manto' : 'Servicio de Costura';
+                const imageHtml = item.image_url ?
+                    `<div class="h-48 overflow-hidden bg-stone-100"><img src="${item.image_url}" alt="${item.nombre}" class="w-full h-full object-cover"></div>` :
+                    `<div class="h-48 bg-stone-100 flex items-center justify-center text-stone-400 text-xs font-medium">Sin imagen</div>`;
+
+                const card = document.createElement('div');
+                card.className = "bg-white rounded-3xl shadow-sm border border-stone-200 overflow-hidden flex flex-col justify-between";
+                card.innerHTML = `
+                    <div>
+                        ${imageHtml}
+                        <div class="p-6 space-y-3">
+                            <div class="flex justify-between items-start">
+                                <span class="${badgeBg} text-[11px] font-bold px-3 py-1 rounded-full">${catLabel}</span>
+                                <span class="text-amber-900 font-extrabold text-base">S/ ${item.precio.toFixed(2)}</span>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-lg text-stone-900 mb-1">${item.nombre}</h3>
+                                <p class="text-xs text-stone-600 leading-relaxed">${item.descripcion}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-6 pt-0">
+                        <a href="https://wa.me/51944155106?text=Hola,%20estoy%20interesado%20en%20el%20producto:%20${encodeURIComponent(item.nombre)}%20(S/%20${item.precio.toFixed(2)})" target="_blank" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-center py-3 rounded-2xl text-xs font-bold transition flex items-center justify-center space-x-2 shadow-sm">
+                            <span>Pedir por WhatsApp (+51 944 155 106)</span>
+                        </a>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        fetchCatalog();
+    </script>
+</body>
+</html>

@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consulta de Estado - Taller de Costura y Detentes</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root { color-scheme: light; }
+        body { background-color: #fafaf9; color: #1c1917; font-family: system-ui, -apple-system, sans-serif; }
+    </style>
+</head>
+<body class="min-h-screen bg-stone-50 text-stone-800 flex flex-col justify-between">
+    <!-- Header -->
+    <header class="bg-amber-900 text-amber-50 shadow-lg">
+        <div class="max-w-xl mx-auto px-4 py-4 flex justify-between items-center">
+            <div>
+                <h1 class="text-base font-bold">Taller de Costura & Detentes</h1>
+                <p class="text-[11px] text-amber-200">Portal de Seguimiento de Encargos</p>
+            </div>
+            <a href="/catalogo" class="bg-amber-800 hover:bg-amber-950 text-white px-3.5 py-2 rounded-xl text-xs font-bold transition border border-amber-700 flex items-center space-x-1">
+                <span>← Regresar al Catálogo</span>
+            </a>
+        </div>
+    </header>
+
+    <!-- Main -->
+    <main class="max-w-xl mx-auto px-4 py-8 space-y-6 w-full flex-1">
+        <div class="bg-white rounded-3xl shadow-sm border border-stone-200 p-8 space-y-6 text-center">
+            <div class="inline-flex items-center justify-center w-16 h-16 bg-amber-100 rounded-2xl shadow-inner mx-auto">
+                <svg class="w-8 h-8 text-amber-800" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            </div>
+            <div class="space-y-2">
+                <h2 class="text-2xl font-extrabold text-stone-900">Consulta el Estado de tu Prenda o Encargo</h2>
+                <p class="text-xs text-stone-500">Ingresa tu número de celular o tu nombre para verificar si tu encargo de costura, detente o estandarte ya está listo.</p>
+            </div>
+            <div class="flex gap-2">
+                <input type="text" id="search-input" placeholder="Ej: 945123456 o Juan Quispe" class="flex-1 border border-stone-300 rounded-2xl px-4 py-3.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500" onkeydown="if(event.key==='Enter') searchOrder()">
+                <button onclick="searchOrder()" class="bg-amber-900 hover:bg-amber-950 text-white px-6 py-3.5 rounded-2xl text-sm font-bold transition shadow">Buscar</button>
+            </div>
+        </div>
+
+        <div id="results-container" class="space-y-4">
+            <!-- Populated by JS -->
+        </div>
+
+        <div id="default-state" class="bg-white rounded-3xl shadow-sm border border-stone-200 p-8 text-center space-y-2">
+            <p class="text-sm font-bold text-stone-700">Esperando consulta</p>
+            <p class="text-xs text-stone-400">Prueba buscando el teléfono de ejemplo: <code class="bg-stone-100 px-2 py-1 rounded text-amber-900 font-mono">945123456</code></p>
+        </div>
+    </main>
+
+    <footer class="text-center py-6 text-xs text-stone-400 border-t border-stone-200">
+        <p>¿Tienes dudas sobre tu pedido? Escríbenos al WhatsApp <a href="https://wa.me/51944155106" class="text-emerald-600 font-bold hover:underline" target="_blank">+51 944 155 106</a></p>
+    </footer>
+
+    <script>
+        async function searchOrder() {
+            const query = document.getElementById('search-input').value.trim();
+            const container = document.getElementById('results-container');
+            const defaultState = document.getElementById('default-state');
+
+            defaultState.classList.add('hidden');
+            container.innerHTML = '';
+
+            if(!query) {
+                defaultState.classList.remove('hidden');
+                return;
+            }
+
+            try {
+                const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+                const orders = await res.json();
+
+                if(orders.length === 0) {
+                    container.innerHTML = `
+                        <div class="bg-white rounded-3xl shadow-sm border border-stone-200 p-8 text-center space-y-3">
+                            <p class="text-sm font-bold text-stone-700">No se encontró ningún encargo con "${query}"</p>
+                            <p class="text-xs text-stone-500">Verifica que el número de celular o nombre coincida con el registrado en el taller.</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                orders.forEach(o => {
+                    let statusLabel = "Pendiente";
+                    let statusColor = "bg-amber-100 text-amber-800 border-amber-300";
+                    let icon = "🕐";
+                    let desc = "Tu encargo ha sido recibido en el taller.";
+
+                    if(o.estado === 'en_proceso') {
+                        statusLabel = "En Proceso";
+                        statusColor = "bg-blue-100 text-blue-800 border-blue-300";
+                        icon = "🧵";
+                        desc = "Estamos trabajando en tu prenda con mucho cuidado.";
+                    } else if(o.estado === 'listo') {
+                        statusLabel = "¡Listo para Recoger!";
+                        statusColor = "bg-emerald-100 text-emerald-800 border-emerald-300";
+                        icon = "✅";
+                        desc = "Tu encargo está terminado. ¡Ya puedes pasar por él!";
+                    } else if(o.estado === 'entregado') {
+                        statusLabel = "Entregado";
+                        statusColor = "bg-stone-100 text-stone-600 border-stone-300";
+                        icon = "📦";
+                        desc = "Encargo entregado con éxito.";
+                    }
+
+                    const saldo = o.total - o.adelanto;
+
+                    const card = document.createElement('div');
+                    card.className = "bg-white rounded-3xl shadow-sm border border-stone-200 overflow-hidden space-y-4";
+                    card.innerHTML = `
+                        <div class="${statusColor} border-b px-6 py-4 flex items-center justify-between">
+                            <div class="flex items-center space-x-3">
+                                <span class="text-2xl">${icon}</span>
+                                <div>
+                                    <p class="font-bold text-sm">${statusLabel}</p>
+                                    <p class="text-xs opacity-80">${desc}</p>
+                                </div>
+                            </div>
+                            <span class="text-xs font-mono font-bold px-3 py-1 bg-white/70 rounded-xl">${o.id}</span>
+                        </div>
+
+                        <div class="p-6 space-y-4">
+                            <div class="bg-stone-50 rounded-2xl p-4 space-y-2 text-xs">
+                                <div class="flex justify-between"><span class="text-stone-500">Cliente:</span><span class="font-bold text-stone-800">${o.cliente}</span></div>
+                                <div class="flex justify-between"><span class="text-stone-500">Prenda / Trabajo:</span><span class="font-semibold text-stone-800 text-right max-w-[220px]">${o.prenda}</span></div>
+                                <div class="flex justify-between"><span class="text-stone-500">Fecha Estimada Entrega:</span><span class="font-bold text-amber-900">${o.fecha}</span></div>
+                            </div>
+
+                            <div class="bg-stone-50 rounded-2xl p-4 space-y-2 text-xs">
+                                <div class="flex justify-between"><span class="text-stone-500">Total:</span><span class="font-bold text-stone-800">S/ ${o.total.toFixed(2)}</span></div>
+                                <div class="flex justify-between"><span class="text-stone-500">Adelanto:</span><span class="font-semibold text-emerald-600">S/ ${o.adelanto.toFixed(2)}</span></div>
+                                <div class="flex justify-between border-t border-stone-200 pt-2"><span class="text-stone-600 font-bold">Saldo Pendiente:</span><span class="font-extrabold ${saldo>0?'text-red-600':'text-emerald-600'}">S/ ${saldo.toFixed(2)}</span></div>
+                            </div>
+
+                            ${o.notas ? `<div class="bg-amber-50 border border-amber-200 rounded-2xl p-3 text-xs"><span class="font-bold text-amber-900">Nota del taller:</span> <span class="text-amber-900">${o.notas}</span></div>` : ''}
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
+            } catch(e) {
+                console.error("Error searching order", e);
+            }
+        }
+    </script>
+</body>
+</html>

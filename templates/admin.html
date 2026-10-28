@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Administración (Mamá) - Taller de Costura</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.js"></script>
+    <style>
+        :root { color-scheme: light; }
+        body { background-color: #f8fafc; color: #1e293b; font-family: system-ui, -apple-system, sans-serif; }
+    </style>
+</head>
+<body class="min-h-screen bg-slate-50 text-slate-800">
+    <!-- Header -->
+    <header class="bg-indigo-950 text-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col md:flex-row justify-between items-center gap-3">
+            <div class="flex items-center space-x-3">
+                <div class="bg-indigo-900 p-2.5 rounded-xl border border-indigo-700">
+                    <svg class="w-7 h-7 text-amber-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                </div>
+                <div>
+                    <h1 class="text-base font-bold">Panel de Control Privado (Mamá)</h1>
+                    <p class="text-[11px] text-indigo-300">WhatsApp: +51 944 155 106 • Catálogo y Taller</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-2">
+                <a href="/catalogo" target="_blank" class="bg-indigo-900 hover:bg-indigo-800 text-white px-3.5 py-2 rounded-xl text-xs font-bold transition border border-indigo-700 flex items-center space-x-1">
+                    <span>📱 Ver Catálogo Público</span>
+                </a>
+                <a href="/seguimiento" target="_blank" class="bg-indigo-900 hover:bg-indigo-800 text-white px-3.5 py-2 rounded-xl text-xs font-bold transition border border-indigo-700 flex items-center space-x-1">
+                    <span>🔍 Ver Consulta Cliente</span>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Navigation & Content -->
+    <main class="max-w-7xl mx-auto px-4 py-8 space-y-6">
+        <!-- Sub-tabs -->
+        <div class="flex border-b border-slate-200 space-x-6 bg-white px-6 pt-4 rounded-2xl shadow-sm">
+            <button onclick="switchTab('catalogo')" id="tab-btn-catalogo" class="pb-3 text-sm font-bold border-b-2 border-indigo-600 text-indigo-700 transition">1. Administrar Catálogo</button>
+            <button onclick="switchTab('taller')" id="tab-btn-taller" class="pb-3 text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-800 transition">2. Gestión de Taller y Encargos</button>
+            <button onclick="switchTab('caja')" id="tab-btn-caja" class="pb-3 text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-800 transition">3. Caja y Ganancias</button>
+        </div>
+
+        <!-- SECTION 1: CATALOG ADMIN -->
+        <section id="section-catalogo" class="space-y-6">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
+                <div>
+                    <h2 class="text-lg font-bold text-slate-900">Gestor de Productos del Catálogo</h2>
+                    <p class="text-xs text-slate-500">Sube fotos directamente desde tu celular o PC, asigna precios y descripciones. Se actualizan automáticamente en el catálogo.</p>
+                </div>
+                <button onclick="openCatalogModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl text-xs font-bold shadow transition flex items-center space-x-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                    <span>Agregar Producto al Catálogo</span>
+                </button>
+            </div>
+
+            <div class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-sm">
+                        <thead>
+                            <tr class="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold text-xs uppercase">
+                                <th class="p-4">Imagen</th>
+                                <th class="p-4">Nombre</th>
+                                <th class="p-4">Categoría</th>
+                                <th class="p-4">Precio (S/)</th>
+                                <th class="p-4">Descripción</th>
+                                <th class="p-4 text-center">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="catalog-tbody" class="divide-y divide-slate-100 text-xs">
+                            <!-- Loaded via API -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 2: WORKSHOP ORDERS -->
+        <section id="section-taller" class="hidden space-y-6">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
+                <div>
+                    <h2 class="text-lg font-bold text-slate-900">Gestión de Taller y Encargos</h2>
+                    <p class="text-xs text-slate-500">Registra prendas, cambia el estado a "Listo" y el cliente podrá consultarlo inmediatamente con su celular.</p>
+                </div>
+                <button onclick="openOrderModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl text-xs font-bold shadow transition flex items-center space-x-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                    <span>Registrar Nuevo Encargo</span>
+                </button>
+            </div>
+
+            <div class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-sm">
+                        <thead>
+                            <tr class="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold text-xs uppercase">
+                                <th class="p-4">Código</th>
+                                <th class="p-4">Cliente / Celular</th>
+                                <th class="p-4">Prenda / Trabajo</th>
+                                <th class="p-4">Entrega</th>
+                                <th class="p-4">Total / Saldo</th>
+                                <th class="p-4">Estado</th>
+                                <th class="p-4 text-center">Cambiar Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody id="orders-tbody" class="divide-y divide-slate-100 text-xs">
+                            <!-- Loaded via API -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 3: EARNINGS & CASH -->
+        <section id="section-caja" class="hidden space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
+                    <p class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">Ingresos Totales (S/)</p>
+                    <h3 class="text-3xl font-extrabold text-indigo-600" id="stat-ingresos">S/ 0.00</h3>
+                </div>
+                <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
+                    <p class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">Encargos en Taller</p>
+                    <h3 class="text-3xl font-extrabold text-amber-600" id="stat-pendientes">0</h3>
+                </div>
+                <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
+                    <p class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">Encargos Listos / Entregados</p>
+                    <h3 class="text-3xl font-extrabold text-emerald-600" id="stat-listos">0</h3>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
+                <h3 class="text-lg font-bold text-slate-900 mb-4">Resumen de Ingresos Automático</h3>
+                <div class="h-64 relative flex items-center justify-center">
+                    <canvas id="earningsChart"></canvas>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Modal: Add Catalog Item (With File Upload) -->
+    <div id="catalog-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-3xl shadow-xl max-w-md w-full p-6 space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                <h3 class="text-lg font-bold text-slate-900">Agregar Producto al Catálogo</h3>
+                <button onclick="closeCatalogModal()" class="text-slate-400 hover:text-slate-600 font-bold text-xl">&times;</button>
+            </div>
+            <form onsubmit="saveCatalogItem(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Nombre</label>
+                    <input type="text" id="cat-nombre" required class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Ej. Detente Sagrado Corazón">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Categoría</label>
+                    <select id="cat-categoria" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm focus:outline-none">
+                        <option value="detentes">Detentes para Cargos</option>
+                        <option value="estandartes">Estandartes y Mantos</option>
+                        <option value="costura">Servicios de Costura</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Precio (S/)</label>
+                    <input type="number" step="0.50" id="cat-precio" required class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm focus:outline-none" placeholder="45.00">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Subir Foto desde el Celular o PC</label>
+                    <input type="file" id="cat-image-file" accept="image/*" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-600 file:mr-4 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Descripción</label>
+                    <textarea id="cat-desc" rows="3" required class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm focus:outline-none" placeholder="Detalles de materiales..."></textarea>
+                </div>
+                <div class="flex justify-end space-x-2 pt-2">
+                    <button type="button" onclick="closeCatalogModal()" class="px-4 py-2 border border-slate-300 text-slate-700 rounded-xl text-sm font-semibold">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-semibold shadow">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Add Order -->
+    <div id="order-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-3xl shadow-xl max-w-md w-full p-6 space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                <h3 class="text-lg font-bold text-slate-900">Registrar Nuevo Encargo</h3>
+                <button onclick="closeOrderModal()" class="text-slate-400 hover:text-slate-600 font-bold text-xl">&times;</button>
+            </div>
+            <form onsubmit="saveOrder(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Nombre del Cliente</label>
+                    <input type="text" id="ord-cliente" required class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm" placeholder="Ej. Sra. Rosa Pérez">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Celular (Clave de Consulta)</label>
+                    <input type="text" id="ord-telefono" required class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm" placeholder="Ej. 987654321">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Prenda / Trabajo</label>
+                    <input type="text" id="ord-prenda" required class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm" placeholder="Ej. Detente bordado dorado">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Fecha Entrega</label>
+                        <input type="date" id="ord-fecha" required class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Total (S/)</label>
+                        <input type="number" step="0.50" id="ord-total" required class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm" placeholder="45.00">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Adelanto (S/)</label>
+                    <input type="number" step="0.50" id="ord-adelanto" required class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm" placeholder="20.00">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Notas</label>
+                    <input type="text" id="ord-notas" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm" placeholder="Notas adicionales">
+                </div>
+                <div class="flex justify-end space-x-2 pt-2">
+                    <button type="button" onclick="closeOrderModal()" class="px-4 py-2 border border-slate-300 text-slate-700 rounded-xl text-sm font-semibold">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-semibold shadow">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Script Admin Logic -->
+    <script>
+        function switchTab(tab) {
+            ['catalogo', 'taller', 'caja'].forEach(t => {
+                document.getElementById('section-' + t).classList.add('hidden');
+                document.getElementById('tab-btn-' + t).className = "pb-3 text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-800 transition";
+            });
+            document.getElementById('section-' + tab).classList.remove('hidden');
+            document.getElementById('tab-btn-' + tab).className = "pb-3 text-sm font-bold border-b-2 border-indigo-600 text-indigo-700 transition";
+
+            if(tab === 'catalogo') loadCatalog();
+            if(tab === 'taller') loadOrders();
+            if(tab === 'caja') loadStats();
+        }
+
+        async function loadCatalog() {
+            try {
+                const res = await fetch('/api/catalog');
+                const items = await res.json();
+                const tbody = document.getElementById('catalog-tbody');
+                tbody.innerHTML = "";
+                items.forEach(item => {
+                    const imgThumb = item.image_url ? `<img src="${item.image_url}" class="w-12 h-12 object-cover rounded-xl shadow-sm">` : `<div class="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center text-slate-400 text-xs">Sin foto</div>`;
+                    const tr = document.createElement('tr');
+                    tr.className = "border-b border-slate-100 hover:bg-slate-50";
+                    tr.innerHTML = `
+                        <td class="p-4">${imgThumb}</td>
+                        <td class="p-4 font-bold text-slate-900">${item.nombre}</td>
+                        <td class="p-4 capitalize text-slate-600">${item.categoria}</td>
+                        <td class="p-4 font-semibold text-indigo-700">S/ ${item.precio.toFixed(2)}</td>
+                        <td class="p-4 text-slate-500 max-w-xs truncate">${item.descripcion}</td>
+                        <td class="p-4 text-center">
+                            <button onclick="deleteCatalog(${item.id})" class="text-xs bg-red-50 hover:bg-red-100 text-red-600 px-3 py-1.5 rounded-xl font-bold">Eliminar</button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } catch(e) { console.error(e); }
+        }
+
+        async function saveCatalogItem(e) {
+            e.preventDefault();
+            const nombre = document.getElementById('cat-nombre').value;
+            const categoria = document.getElementById('cat-categoria').value;
+            const precio = parseFloat(document.getElementById('cat-precio').value);
+            const descripcion = document.getElementById('cat-desc').value;
+            const fileInput = document.getElementById('cat-image-file');
+
+            let imageUrl = "";
+            if (fileInput.files && fileInput.files[0]) {
+                const reader = new FileReader();
+                reader.onload = async function(uploadEvent) {
+                    imageUrl = uploadEvent.target.result; // Base64 Data URL
+                    await sendCatalogData({ nombre, categoria, precio, descripcion, image_url: imageUrl });
+                };
+                reader.readAsDataURL(fileInput.files[0]);
+            } else {
+                await sendCatalogData({ nombre, categoria, precio, descripcion, image_url: "" });
+            }
+        }
+
+        async function sendCatalogData(data) {
+            await fetch('/api/catalog', { method: 'POST', body: JSON.stringify(data) });
+            closeCatalogModal();
+            loadCatalog();
+            alert("¡Producto agregado con éxito!");
+        }
+
+        async function deleteCatalog(id) {
+            if(confirm("¿Eliminar este producto?")) {
+                await fetch(`/api/catalog?id=${id}`, { method: 'DELETE' });
+                loadCatalog();
+            }
+        }
+
+        async function loadOrders() {
+            try {
+                const res = await fetch('/api/orders');
+                const orders = await res.json();
+                const tbody = document.getElementById('orders-tbody');
+                tbody.innerHTML = "";
+                orders.forEach(o => {
+                    let badgeColor = "bg-amber-100 text-amber-800";
+                    let badgeText = "Pendiente";
+                    if(o.estado === 'en_proceso') { badgeColor = "bg-blue-100 text-blue-800"; badgeText = "En Proceso"; }
+                    if(o.estado === 'listo') { badgeColor = "bg-emerald-100 text-emerald-800"; badgeText = "Listo"; }
+                    if(o.estado === 'entregado') { badgeColor = "bg-slate-100 text-slate-600"; badgeText = "Entregado"; }
+
+                    const saldo = o.total - o.adelanto;
+                    const tr = document.createElement('tr');
+                    tr.className = "border-b border-slate-100 hover:bg-slate-50";
+                    tr.innerHTML = `
+                        <td class="p-4 font-mono font-bold text-indigo-700">${o.id}</td>
+                        <td class="p-4"><div class="font-bold text-slate-900">${o.cliente}</div><div class="text-[11px] text-slate-500">${o.telefono}</div></td>
+                        <td class="p-4 font-medium text-slate-800">${o.prenda}</td>
+                        <td class="p-4 text-slate-600">${o.fecha}</td>
+                        <td class="p-4"><div class="font-semibold text-slate-900">S/ ${o.total.toFixed(2)}</div><div class="text-[11px] text-emerald-600">Saldo: S/ ${saldo.toFixed(2)}</div></td>
+                        <td class="p-4"><span class="px-2.5 py-1 rounded-full text-xs font-bold ${badgeColor}">${badgeText}</span></td>
+                        <td class="p-4 text-center">
+                            <select onchange="updateStatus('${o.id}', this.value)" class="text-xs bg-slate-100 border border-slate-300 rounded-xl px-2.5 py-1.5 font-medium">
+                                <option value="pendiente" ${o.estado==='pendiente'?'selected':''}>Pendiente</option>
+                                <option value="en_proceso" ${o.estado==='en_proceso'?'selected':''}>En Proceso</option>
+                                <option value="listo" ${o.estado==='listo'?'selected':''}>Listo</option>
+                                <option value="entregado" ${o.estado==='entregado'?'selected':''}>Entregado</option>
+                            </select>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } catch(e) { console.error(e); }
+        }
+
+        async function saveOrder(e) {
+            e.preventDefault();
+            const data = {
+                cliente: document.getElementById('ord-cliente').value,
+                telefono: document.getElementById('ord-telefono').value,
+                prenda: document.getElementById('ord-prenda').value,
+                fecha: document.getElementById('ord-fecha').value,
+                total: parseFloat(document.getElementById('ord-total').value),
+                adelanto: parseFloat(document.getElementById('ord-adelanto').value),
+                notas: document.getElementById('ord-notas').value
+            };
+            await fetch('/api/orders', { method: 'POST', body: JSON.stringify(data) });
+            closeOrderModal();
+            loadOrders();
+            alert("¡Encargo registrado con éxito!");
+        }
+
+        async function updateStatus(id, estado) {
+            await fetch('/api/orders/status', { method: 'POST', body: JSON.stringify({ id, estado }) });
+            loadOrders();
+        }
+
+        async function loadStats() {
+            try {
+                const res = await fetch('/api/orders');
+                const orders = await res.json();
+                const total = orders.reduce((sum, o) => sum + o.total, 0);
+                const pendientes = orders.filter(o => o.estado === 'pendiente' || o.estado === 'en_proceso').length;
+                const listos = orders.filter(o => o.estado === 'listo' || o.estado === 'entregado').length;
+
+                document.getElementById('stat-ingresos').textContent = `S/ ${total.toFixed(2)}`;
+                document.getElementById('stat-pendientes').textContent = pendientes;
+                document.getElementById('stat-listos').textContent = listos;
+
+                initChart();
+            } catch(e) { console.error(e); }
+        }
+
+        let chartInstance = null;
+        function initChart() {
+            const ctx = document.getElementById('earningsChart').getContext('2d');
+            if(chartInstance) chartInstance.destroy();
+            chartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Detentes para Cargos', 'Estandartes', 'Costura y Ruedos'],
+                    datasets: [{
+                        label: 'Ventas en Soles (S/)',
+                        data: [450, 440, 200],
+                        backgroundColor: ['#6366f1', '#a855f7', '#3b82f6'],
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+        }
+
+        function openCatalogModal() { document.getElementById('catalog-modal').classList.remove('hidden'); document.getElementById('catalog-modal').classList.add('flex'); }
+        function closeCatalogModal() { document.getElementById('catalog-modal').classList.remove('flex'); document.getElementById('catalog-modal').classList.add('hidden'); }
+        function openOrderModal() {
+            document.getElementById('order-modal').classList.remove('hidden');
+            document.getElementById('order-modal').classList.add('flex');
+            document.getElementById('ord-fecha').value = new Date().toISOString().split('T')[0];
+        }
+        function closeOrderModal() { document.getElementById('order-modal').classList.remove('flex'); document.getElementById('order-modal').classList.add('hidden'); }
+
+        // Initial load
+        loadCatalog();
+    </script>
+</body>
+</html>
